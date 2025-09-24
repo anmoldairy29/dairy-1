@@ -1,73 +1,103 @@
-// ** IMPORTANT: Replace with your actual Supabase credentials **
-const SUPABASE_URL = "https://vxfksjmbgwtpypgawmtp.supabase.co;"
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ4Zmtzam1iZ3d0cHlwZ2F3bXRwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg2OTg3MjMsImV4cCI6MjA3NDI3NDcyM30.IDY5F00_KeQo08O-_Nv1-mObsRbWDbvH0-oEKp_kZgk";
+// ** Supabase Credentials **
+const SUPABASE_URL = 'https://vxfksjmbgwtpypgawmtp.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ4Zmtzam1iZ3d0cHlwZ2F3bXRwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg2OTg3MjMsImV4cCI6MjA3NDI3NDcyM30.IDY5F00_KeQo08O-_Nv1-mObsRbWDbvH0-oEKp_kZgk';
 const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // --- DOM Elements ---
+const navLinks = document.querySelectorAll('nav ul li a');
+const pages = document.querySelectorAll('.page');
+
+const homePage = document.getElementById('home-page');
+const recordsPage = document.getElementById('records-page');
+const milkRecordsView = document.getElementById('milk-records-view');
+
+// Home page elements
+const dailyMilkForm = document.getElementById('daily-milk-form');
+const customerSelect = document.getElementById('customer-select');
+const litersInputHome = document.getElementById('liters-input-home');
+const homeSearchInput = document.getElementById('home-search-input');
+const homeCustomerList = document.getElementById('home-customer-list');
 const customerForm = document.getElementById('customer-form');
 const customerIdInput = document.getElementById('customer-id');
 const customerNameInput = document.getElementById('customer-name');
 const customerMobileInput = document.getElementById('customer-mobile');
 const submitBtn = document.getElementById('submit-btn');
-const customerList = document.getElementById('customer-list');
-const searchInput = document.getElementById('search-input');
 
-const customerListSection = document.getElementById('customer-list-section');
-const milkRecordsSection = document.getElementById('milk-records-section');
+// Records page elements
+const recordsCustomerList = document.getElementById('records-customer-list');
+
+// Milk records view elements
+const backBtn = document.getElementById('back-btn');
 const milkRecordsHeading = document.getElementById('milk-records-heading');
-const backToCustomersBtn = document.getElementById('back-to-customers-btn');
-const milkEntryForm = document.getElementById('milk-entry-form');
-const milkCustomerIdInput = document.getElementById('milk-customer-id');
-const litersInput = document.getElementById('liters-input');
-const milkRecordsList = document.getElementById('milk-records-list');
 const monthlyTotalLittersEl = document.getElementById('monthly-total-liters');
+const milkRecordsList = document.getElementById('milk-records-list');
 
-let currentCustomerId = null;
+let allCustomers = [];
 
-// --- CRUD Operations for Customers ---
+// --- Navigation & Page Management ---
+navLinks.forEach(link => {
+    link.addEventListener('click', (e) => {
+        e.preventDefault();
+        const pageId = e.target.id.replace('-link', '-page');
 
-// Fetch and display customers
-async function fetchCustomers(searchTerm = '') {
-    let query = supabase
-        .from('customers')
-        .select('*')
-        .order('created_at', { ascending: true });
+        pages.forEach(page => page.classList.add('hidden-page'));
+        document.getElementById(pageId).classList.remove('hidden-page');
+        navLinks.forEach(navLink => navLink.classList.remove('active'));
+        e.target.classList.add('active');
 
-    if (searchTerm) {
-        query = query.filter('name', 'ilike', `%${searchTerm}%`);
-    }
+        // Refresh data based on the page
+        if (pageId === 'home-page') {
+            fetchCustomersAndPopulateForms();
+        } else if (pageId === 'records-page') {
+            fetchCustomersAndPopulatePayments();
+        }
+    });
+});
 
-    const { data, error } = await query;
+backBtn.addEventListener('click', () => {
+    milkRecordsView.classList.add('hidden-page');
+    recordsPage.classList.remove('hidden-page');
+});
+
+// --- Customer Management & Display ---
+async function fetchCustomersAndPopulateForms() {
+    const { data, error } = await supabase.from('customers').select('*').order('name', { ascending: true });
     if (error) {
         console.error('Error fetching customers:', error.message);
         return;
     }
-    
-    displayCustomers(data);
+    allCustomers = data;
+    displayCustomersHome(allCustomers);
+    populateCustomerSelect(allCustomers);
 }
 
-function displayCustomers(customers) {
-    customerList.innerHTML = '';
+function displayCustomersHome(customers) {
+    homeCustomerList.innerHTML = '';
     customers.forEach(customer => {
         const row = document.createElement('tr');
-        const paymentIcon = customer.payment_status ? '✅' : '❌';
-        const paymentClass = customer.payment_status ? 'payment-done' : 'payment-pending';
-
         row.innerHTML = `
             <td>${customer.name}</td>
             <td>${customer.mobile_number}</td>
-            <td><span class="status-icon ${paymentClass}" data-id="${customer.id}">${paymentIcon}</span></td>
-            <td class="actions-cell">
+            <td>
                 <button class="edit-btn" data-id="${customer.id}">Edit</button>
                 <button class="delete-btn" data-id="${customer.id}">Delete</button>
-                <button class="view-milk-btn" data-id="${customer.id}" data-name="${customer.name}">View Milk</button>
             </td>
         `;
-        customerList.appendChild(row);
+        homeCustomerList.appendChild(row);
     });
 }
 
-// Add/Edit Customer
+function populateCustomerSelect(customers) {
+    customerSelect.innerHTML = '';
+    customers.forEach(customer => {
+        const option = document.createElement('option');
+        option.value = customer.id;
+        option.textContent = customer.name;
+        customerSelect.appendChild(option);
+    });
+}
+
+// --- Add/Edit Customer ---
 customerForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const name = customerNameInput.value.trim();
@@ -77,72 +107,74 @@ customerForm.addEventListener('submit', async (e) => {
     if (!name || !mobile_number) return;
 
     if (customerId) {
-        // Edit existing customer
-        const { error } = await supabase
-            .from('customers')
-            .update({ name, mobile_number })
-            .eq('id', customerId);
-
+        const { error } = await supabase.from('customers').update({ name, mobile_number }).eq('id', customerId);
         if (error) {
             console.error('Error updating customer:', error.message);
             alert('Failed to update customer.');
         } else {
             alert('Customer updated successfully!');
-            resetForm();
+            resetCustomerForm();
         }
     } else {
-        // Add new customer
-        const { error } = await supabase
-            .from('customers')
-            .insert([{ name, mobile_number }]);
-
+        const { error } = await supabase.from('customers').insert([{ name, mobile_number }]);
         if (error) {
             console.error('Error adding customer:', error.message);
-            alert('Failed to add customer. Check if mobile number is unique.');
+            alert('Failed to add customer.');
         } else {
             alert('Customer added successfully!');
             customerForm.reset();
         }
     }
-    fetchCustomers();
+    fetchCustomersAndPopulateForms();
 });
 
-// Delete Customer
-customerList.addEventListener('click', async (e) => {
-    if (e.target.classList.contains('delete-btn')) {
-        const id = e.target.dataset.id;
-        if (confirm('Are you sure you want to delete this customer? This will also delete all their milk records.')) {
-            // First, delete related milk records
-            await supabase.from('milk_records').delete().eq('customer_id', id);
-            // Then, delete the customer
-            const { error } = await supabase.from('customers').delete().eq('id', id);
-            if (error) {
-                console.error('Error deleting customer:', error.message);
-                alert('Failed to delete customer.');
-            } else {
-                fetchCustomers();
-            }
-        }
+function resetCustomerForm() {
+    customerForm.reset();
+    customerIdInput.value = '';
+    submitBtn.textContent = 'Add Customer';
+}
+
+// --- Home Page Search ---
+homeSearchInput.addEventListener('input', (e) => {
+    const searchTerm = e.target.value.toLowerCase();
+    const filteredCustomers = allCustomers.filter(customer => 
+        customer.name.toLowerCase().includes(searchTerm)
+    );
+    displayCustomersHome(filteredCustomers);
+});
+
+// --- Records Page & Payments ---
+async function fetchCustomersAndPopulatePayments() {
+    const { data, error } = await supabase.from('customers').select('*').order('name', { ascending: true });
+    if (error) {
+        console.error('Error fetching customers:', error.message);
+        return;
     }
-});
+    displayCustomersRecords(data);
+}
 
-// Edit Customer
-customerList.addEventListener('click', async (e) => {
-    if (e.target.classList.contains('edit-btn')) {
-        const id = e.target.dataset.id;
-        const { data, error } = await supabase.from('customers').select('*').eq('id', id).single();
-        if (data) {
-            customerIdInput.value = data.id;
-            customerNameInput.value = data.name;
-            customerMobileInput.value = data.mobile_number;
-            submitBtn.textContent = 'Update Customer';
-        }
-    }
-});
+function displayCustomersRecords(customers) {
+    recordsCustomerList.innerHTML = '';
+    customers.forEach(customer => {
+        const row = document.createElement('tr');
+        const paymentIcon = customer.payment_status ? '✅' : '❌';
+        const paymentClass = customer.payment_status ? 'payment-done' : 'payment-pending';
 
-// Toggle Payment Status
-customerList.addEventListener('click', async (e) => {
-    if (e.target.classList.contains('status-icon')) {
+        row.innerHTML = `
+            <td>${customer.name}</td>
+            <td>${customer.mobile_number}</td>
+            <td class="payment-col"><span class="payment-status ${paymentClass}" data-id="${customer.id}">${paymentIcon}</span></td>
+            <td class="actions-col">
+                <button class="view-btn" data-id="${customer.id}" data-name="${customer.name}">View Records</button>
+            </td>
+        `;
+        recordsCustomerList.appendChild(row);
+    });
+}
+
+// --- Toggle Payment Status ---
+recordsCustomerList.addEventListener('click', async (e) => {
+    if (e.target.classList.contains('payment-status')) {
         const id = e.target.dataset.id;
         const { data: customer, error } = await supabase.from('customers').select('payment_status').eq('id', id).single();
         if (customer) {
@@ -157,43 +189,62 @@ customerList.addEventListener('click', async (e) => {
     }
 });
 
-// Search functionality
-searchInput.addEventListener('input', (e) => {
-    const searchTerm = e.target.value;
-    fetchCustomers(searchTerm);
+// --- Daily Milk Entry (Home Page) ---
+dailyMilkForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const customerId = customerSelect.value;
+    const liters = parseFloat(litersInputHome.value);
+    const date = new Date().toISOString().split('T')[0];
+
+    if (isNaN(liters) || liters <= 0 || !customerId) {
+        alert('Please select a customer and enter a valid amount of milk.');
+        return;
+    }
+    
+    // Check if record for today already exists
+    const { data: existingRecord } = await supabase
+        .from('milk_records')
+        .select('id')
+        .eq('customer_id', customerId)
+        .eq('date', date)
+        .single();
+    
+    if (existingRecord) {
+        const confirmUpdate = confirm('A record for today already exists. Do you want to update it?');
+        if (confirmUpdate) {
+            await supabase.from('milk_records').update({ liters }).eq('id', existingRecord.id);
+            alert('Milk data updated successfully!');
+        } else {
+            return;
+        }
+    } else {
+        await supabase.from('milk_records').insert([{ customer_id: customerId, date: date, liters }]);
+        alert('Milk data added successfully!');
+    }
+    
+    dailyMilkForm.reset();
 });
 
-// --- Daily Milk Tracking ---
-
-// View Milk Records for a specific customer
-customerList.addEventListener('click', async (e) => {
-    if (e.target.classList.contains('view-milk-btn')) {
+// --- Milk Records View ---
+recordsCustomerList.addEventListener('click', async (e) => {
+    if (e.target.classList.contains('view-btn')) {
         const customerId = e.target.dataset.id;
         const customerName = e.target.dataset.name;
-        currentCustomerId = customerId;
-        milkCustomerIdInput.value = customerId;
-
-        // Show/Hide sections
-        customerListSection.classList.add('hidden');
-        milkRecordsSection.classList.remove('hidden');
+        
+        // Show milk records view and hide others
+        recordsPage.classList.add('hidden-page');
+        milkRecordsView.classList.remove('hidden-page');
+        
         milkRecordsHeading.textContent = `${customerName}'s Milk Records`;
-
+        
         fetchMilkRecords(customerId);
     }
 });
 
-// Back to Customers button
-backToCustomersBtn.addEventListener('click', () => {
-    customerListSection.classList.remove('hidden');
-    milkRecordsSection.classList.add('hidden');
-    resetForm();
-});
-
-// Fetch and display milk records for a customer
 async function fetchMilkRecords(customerId) {
     const today = new Date();
-    const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1).toISOString();
-    const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0, 23, 59, 59, 999).toISOString();
+    const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
+    const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0, 23, 59, 59, 999).toISOString().split('T')[0];
 
     const { data, error } = await supabase
         .from('milk_records')
@@ -216,15 +267,16 @@ function displayMilkRecords(records) {
     let totalLiters = 0;
 
     if (records.length === 0) {
-        milkRecordsList.innerHTML = '<tr><td colspan="2">No milk records found for this month.</td></tr>';
+        milkRecordsList.innerHTML = '<tr><td colspan="2">No milk records for this month.</td></tr>';
     } else {
         records.forEach(record => {
             const row = document.createElement('tr');
-            const recordDate = new Date(record.date);
-            const formattedDate = recordDate.toLocaleDateString();
+            const recordDate = new Date(record.date + 'T12:00:00Z'); // Add time to avoid timezone issues
+            const formattedDate = recordDate.toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' });
+            
             row.innerHTML = `
                 <td>${formattedDate}</td>
-                <td>${record.liters} L</td>
+                <td>${parseFloat(record.liters).toFixed(2)} L</td>
             `;
             milkRecordsList.appendChild(row);
             totalLiters += parseFloat(record.liters);
@@ -234,69 +286,5 @@ function displayMilkRecords(records) {
     monthlyTotalLittersEl.textContent = totalLiters.toFixed(2);
 }
 
-// Add daily milk record
-milkEntryForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const liters = parseFloat(litersInput.value);
-    const customerId = milkCustomerIdInput.value;
-    const date = new Date().toISOString().split('T')[0]; // Auto-saves today's date
-
-    if (isNaN(liters) || liters <= 0 || !customerId) {
-        alert('Please enter a valid amount of milk.');
-        return;
-    }
-
-    // Check if a record for today already exists
-    const { data: existingRecord, error: fetchError } = await supabase
-        .from('milk_records')
-        .select('*')
-        .eq('customer_id', customerId)
-        .eq('date', date)
-        .single();
-
-    if (existingRecord) {
-        const confirmation = confirm(`A record for today (${liters}) already exists. Do you want to update it?`);
-        if (!confirmation) return;
-        
-        // Update the existing record
-        const { error: updateError } = await supabase
-            .from('milk_records')
-            .update({ liters: liters })
-            .eq('id', existingRecord.id);
-        
-        if (updateError) {
-            console.error('Error updating milk record:', updateError.message);
-            alert('Failed to update milk record.');
-        } else {
-            alert('Milk record updated successfully!');
-            litersInput.value = '';
-            fetchMilkRecords(customerId);
-        }
-
-    } else {
-        // Insert a new record
-        const { error: insertError } = await supabase
-            .from('milk_records')
-            .insert([{ customer_id: customerId, date: date, liters: liters }]);
-
-        if (insertError) {
-            console.error('Error adding milk record:', insertError.message);
-            alert('Failed to add milk record.');
-        } else {
-            alert('Milk record added successfully!');
-            litersInput.value = '';
-            fetchMilkRecords(customerId);
-        }
-    }
-});
-
-// --- Utility Functions ---
-
-function resetForm() {
-    customerForm.reset();
-    customerIdInput.value = '';
-    submitBtn.textContent = 'Add Customer';
-}
-
-// Initial fetch
-fetchCustomers();
+// Initial fetch to load the Home page
+fetchCustomersAndPopulateForms();
