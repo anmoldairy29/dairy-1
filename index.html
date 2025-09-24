@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🥛 Milk Tracker</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>🥛 My Milk Tracker</h1>
+    </header>
+
+    <main>
+        <section id="customer-form-section">
+            <h2>Customer Management</h2>
+            <form id="customer-form">
+                <input type="hidden" id="customer-id">
+                <input type="text" id="customer-name" placeholder="Customer Name" required>
+                <input type="tel" id="customer-mobile" placeholder="Mobile Number" required>
+                <button type="submit" id="submit-btn">Add Customer</button>
+            </form>
+        </section>
+        
+        <hr>
+
+        <section id="customer-list-section">
+            <h2>Customer List</h2>
+            <input type="text" id="search-input" placeholder="Search by name...">
+            <table id="customer-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Mobile</th>
+                        <th>Payment</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="customer-list">
+                    </tbody>
+            </table>
+        </section>
+
+        <hr>
+
+        <section id="milk-records-section" class="hidden">
+            <h2 id="milk-records-heading"></h2>
+            <button id="back-to-customers-btn">Back to Customers</button>
+
+            <form id="milk-entry-form">
+                <input type="hidden" id="milk-customer-id">
+                <input type="number" id="liters-input" step="0.5" placeholder="Liters for today" required>
+                <button type="submit">Add Daily Milk</button>
+            </form>
+            
+            <h3>Monthly Records</h3>
+            <p>Total Liters this month: <strong id="monthly-total-liters">0</strong></p>
+            <table id="milk-records-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Liters</th>
+                    </tr>
+                </thead>
+                <tbody id="milk-records-list">
+                    </tbody>
+            </table>
+        </section>
+    </main>
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="script.js"></script>
+</body>
+</html>

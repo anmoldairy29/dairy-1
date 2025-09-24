@@ -1,0 +1,141 @@
+:root {
+    --primary-color: #4CAF50;
+    --secondary-color: #8BC34A;
+    --background-color: #F0F4F8;
+    --text-color: #333;
+    --border-color: #ddd;
+    --light-grey: #f4f4f4;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--background-color);
+    color: var(--text-color);
+    padding: 20px;
+    line-height: 1.6;
+}
+
+header {
+    text-align: center;
+    margin-bottom: 20px;
+    color: var(--primary-color);
+}
+
+main {
+    max-width: 900px;
+    margin: 0 auto;
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+section {
+    margin-bottom: 25px;
+}
+
+h2, h3 {
+    border-bottom: 2px solid var(--primary-color);
+    padding-bottom: 5px;
+    margin-bottom: 15px;
+}
+
+hr {
+    border: none;
+    height: 1px;
+    background-color: var(--border-color);
+    margin: 20px 0;
+}
+
+form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+input, button {
+    padding: 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    font-size: 16px;
+}
+
+input[type="text"], input[type="tel"], input[type="number"] {
+    flex: 1;
+    min-width: 200px;
+}
+
+button {
+    background-color: var(--primary-color);
+    color: #fff;
+    cursor: pointer;
+    border: none;
+    transition: background-color 0.3s ease;
+}
+
+button:hover {
+    background-color: var(--secondary-color);
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+
+th, td {
+    border: 1px solid var(--border-color);
+    padding: 12px;
+    text-align: left;
+}
+
+th {
+    background-color: var(--light-grey);
+    font-weight: bold;
+}
+
+tr:nth-child(even) {
+    background-color: var(--light-grey);
+}
+
+.actions-cell button, .actions-cell a {
+    background-color: #2196F3;
+    color: white;
+    padding: 5px 10px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    text-decoration: none;
+    margin-right: 5px;
+}
+
+.actions-cell .delete-btn {
+    background-color: #f44336;
+}
+
+.actions-cell .edit-btn {
+    background-color: #FFC107;
+}
+
+.status-icon {
+    font-size: 20px;
+    cursor: pointer;
+}
+
+.payment-done {
+    color: var(--primary-color);
+}
+
+.payment-pending {
+    color: #f44336;
+}
+
+.hidden {
+    display: none;
+}
